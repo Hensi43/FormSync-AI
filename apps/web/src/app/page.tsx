@@ -18,7 +18,7 @@ export default function Home() {
     if (!generatedForm) return;
     setIsSaving(true);
     try {
-      const res = await fetch("http://localhost:8000/api/v1/forms/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/forms/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -41,7 +41,7 @@ export default function Home() {
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const res = await fetch("http://localhost:8000/api/v1/generate", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description: prompt }),
@@ -58,7 +58,7 @@ export default function Home() {
 
   useEffect(() => {
     // Attempt to connect to the local FastAPI backend
-    fetch("http://localhost:8000/health")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/health`)
       .then((res) => res.json())
       .then((data) => {
         setApiData(data);
