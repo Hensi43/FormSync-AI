@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Activity, Server, AlertCircle, CheckCircle2, Code, Eye } from "lucide-react";
 import FormRenderer from "../components/FormRenderer";
+import Link from "next/link";
 
 export default function Home() {
   const [apiStatus, setApiStatus] = useState<"loading" | "connected" | "error">("loading");
@@ -11,6 +12,7 @@ export default function Home() {
   const [generatedForm, setGeneratedForm] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewMode, setViewMode] = useState<"json" | "preview">("preview");
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -29,7 +31,8 @@ export default function Home() {
       });
       if (!res.ok) throw new Error("Failed to save");
       const data = await res.json();
-      alert(`Form Saved! ID: ${data.id}`);
+      setShareUrl(`${window.location.origin}/public/${data.id}`);
+      // alert(`Form Saved! ID: ${data.id}`);
     } catch (err) {
       console.error(err);
       alert("Failed to save form to Supabase");
@@ -73,9 +76,17 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans">
       {/* Header */}
-      <header className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4 flex items-center gap-3">
-        <Activity className="w-6 h-6 text-indigo-500" />
-        <h1 className="text-xl font-bold tracking-tight">FormSync AI</h1>
+      <header className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Activity className="w-6 h-6 text-indigo-500" />
+          <h1 className="text-xl font-bold tracking-tight">FormSync AI</h1>
+        </div>
+        <Link
+          href="/dashboard"
+          className="text-sm font-medium text-zinc-600 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 transition-colors"
+        >
+          Dashboard
+        </Link>
       </header>
 
       {/* Main Content */}
@@ -202,6 +213,52 @@ export default function Home() {
                     )}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Save & Share Section */}
+            {generatedForm && !generatedForm.error && (
+              <div className="mt-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-indigo-900 dark:text-indigo-100">Save & Share</h3>
+                    <p className="text-sm text-indigo-700 dark:text-indigo-300">Publish this form to collect responses.</p>
+                  </div>
+                  {!shareUrl ? (
+                    <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+                    >
+                      {isSaving ? "Saving..." : "Save Form"}
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        readOnly
+                        value={shareUrl}
+                        className="bg-white dark:bg-black border border-indigo-200 dark:border-indigo-700 text-sm px-3 py-2 rounded-lg w-64 text-zinc-600 dark:text-zinc-300 outline-none"
+                      />
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(shareUrl);
+                          alert("Copied!");
+                        }}
+                        className="px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Copy
+                      </button>
+                      <a
+                        href={shareUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Open
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </section>

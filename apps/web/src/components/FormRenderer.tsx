@@ -18,7 +18,7 @@ type FormSchema = {
     fields: FormField[];
 };
 
-export default function FormRenderer({ schema }: { schema: FormSchema }) {
+export default function FormRenderer({ schema, onSubmit: externalSubmit }: { schema: FormSchema, onSubmit?: (data: any) => Promise<void> }) {
     const {
         register,
         handleSubmit,
@@ -27,10 +27,14 @@ export default function FormRenderer({ schema }: { schema: FormSchema }) {
     } = useForm();
 
     const onSubmit = async (data: any) => {
-        // Simulate API call
-        console.log("Form Data Submitted:", data);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        alert(JSON.stringify(data, null, 2));
+        if (externalSubmit) {
+            await externalSubmit(data);
+        } else {
+            // Simulate API call for preview mode
+            console.log("Form Data Submitted:", data);
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            alert("This is a preview. Form Data: \n" + JSON.stringify(data, null, 2));
+        }
         reset();
     };
 
