@@ -1,76 +1,37 @@
-# FormSync AI
+# ✨ FormSync AI
 
-A dynamic form generation platform powered by Google Gemini AI, FastAPI, and Next.js. This application allows users to describe a form in natural language (e.g., "Create a job application form") and instantly generates a fully functional, validate-able form schema.
+> **Generate complex forms instantly from simple text prompts.**  
+> Powered by Google Gemini AI, Next.js, and FastAPI.
 
-## 🚀 Features
-- **AI-Powered Generation**: Uses Google Gemini Flash to convert text to JSON schemas.
-- **Dynamic Rendering**: React frontend renders forms instantly from JSON.
-- **Modern Stack**: Built with Next.js 15, TailwindCSS, FastAPI, and Supabase.
+![Project Status](https://img.shields.io/badge/Status-Beta-blue)
+![Tech Stack](https://img.shields.io/badge/Stack-Next.js%20%7C%20FastAPI%20%7C%20Gemini-indigo)
 
-## 🛠️ Tech Stack
-- **Frontend**: Next.js 15 (React 19), TailwindCSS, Lucide Icons.
-- **Backend**: FastAPI (Python), Pydantic.
-- **AI Model**: Google Gemini 1.5 Flash (via REST API).
-- **Database**: Supabase (PostgreSQL).
+## 📚 DOCUMENTATION
 
-## 📋 Prerequisites
-- Node.js 18+
-- Python 3.11+
-- Google Gemini API Key (get one at [aistudio.google.com](https://aistudio.google.com/))
-- Supabase Project (optional for storage)
+We follow a modular documentation approach to keep things organized.
 
-## 🏁 Getting Started
+### 1. [📐 ARCHITECTURE DESIGN](./ARCHITECTURE_DESIGN.md)
+> **Deep Dive**: Learn how the React Frontend communicates with the Python Backend and how we leverage Gemini for schema generation.
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/Hensi43/FormSync-AI.git
-cd FormSync-AI
-```
+### 2. [⚡ QUICK START](./QUICK_START.md)
+> **Get Running**: Step-by-step instructions to set up the project locally (Frontend + Backend + Google Auth).
 
-### 2. Backend Setup (FastAPI)
-Navigate to the `apps/api` folder:
-```bash
-# Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+### 3. [✅ FEATURE INVENTORY](./FEATURE_INVENTORY.md)
+> **Roadmap**: See what's working, what's in beta, and what we are building next.
 
-# Install dependencies
-pip install -r apps/api/requirements.txt
-```
+---
 
-**Configure Environment Variables:**
-Create `apps/api/.env` and add your keys:
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-```
+## 🚀 OVERVIEW
 
-**Run the Server:**
-```bash
-cd apps/api
-uvicorn main:app --reload --port 8000
-```
-The API will be available at `http://localhost:8000`. Test it with `http://localhost:8000/health`.
+**FormSync AI** eliminates the tedious drag-and-drop process of form builders.
+1.  **Describe it**: "I need a vendor application form with tax ID, business type, and file upload."
+2.  **Generate it**: Our AI constructs the perfect schema instantly.
+3.  **Sync it**: Export directly to **Google Forms** with one click.
 
-### 3. Frontend Setup (Next.js)
-Open a new terminal and navigate to `apps/web`:
-```bash
-cd apps/web
+### Key Capabilities
+-   **AI-Native**: Built from the ground up to understand context and intent.
+-   **Multi-Platform**: Render forms natively in React or sync to external providers (Google Forms).
+-   **Modern Stack**: Built with the latest Next.js 15 routing and Server Components.
 
-# Install dependencies
-npm install
-```
-
-**Run the Development Server:**
-```bash
-npm run dev
-```
-The Frontend will be available at `http://localhost:3000`.
-
-## 🧪 Usage
-1. Open the frontend at `http://localhost:3000`.
-2. In the text area, type a description like:
-   > "Create a registration form for a hackathon with fields for team name, number of members, project idea, and dietary restrictions."
-3. Click **"Generate JSON Schema"**.
-4. The AI will generate the form structure, and you will see a live preview of the form on the right/bottom.
+## 🤝 CONTRIBUTING
+Contributions are welcome! Please check the Feature Inventory for open tasks.

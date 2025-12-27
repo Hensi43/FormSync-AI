@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
-from routers import system, generator, forms
+from routers import system, generator, forms, google
 
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
 
@@ -16,3 +16,4 @@ app.add_middleware(
 app.include_router(system.router, tags=["System"])
 app.include_router(generator.router, tags=["Generator"], prefix=settings.API_V1_STR)
 app.include_router(forms.router, tags=["Forms"], prefix=f"{settings.API_V1_STR}/forms")
+app.include_router(google.router, tags=["Google"], prefix=f"{settings.API_V1_STR}/google")

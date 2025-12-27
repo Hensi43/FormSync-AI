@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, Server, AlertCircle, CheckCircle2, Code, Eye } from "lucide-react";
+import { Activity, Server, AlertCircle, CheckCircle2, Code, Eye, FileText, ExternalLink } from "lucide-react";
 import FormRenderer from "../components/FormRenderer";
 import Link from "next/link";
 
@@ -13,6 +13,9 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewMode, setViewMode] = useState<"json" | "preview">("preview");
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [isGoogleChecked, setIsGoogleChecked] = useState(false);
+  const [isGoogleAuth, setIsGoogleAuth] = useState(false);
+  const [googleFormUrl, setGoogleFormUrl] = useState<string | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -43,19 +46,54 @@ export default function Home() {
 
   const handleGenerate = async () => {
     setIsGenerating(true);
+    setGoogleFormUrl(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/generate`, {
+      const endpoint = isGoogleChecked ? "/api/v1/google/generate/google" : "/api/v1/generate";
+      // Note: My backend router structure might be /api/v1/generate/google 
+      // Let's check my backend code again. 
+      // Router generator.py has @router.post("/generate/google"). prefix is API_V1_STR (/api/v1).
+      // So it is /api/v1/generate/google.
+
+      const url = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/generate${isGoogleChecked ? "/google" : ""}`;
+
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description: prompt }),
       });
       const data = await res.json();
-      setGeneratedForm(data);
+
+      if (isGoogleChecked && data.formUrl) {
+        setGoogleFormUrl(data.formUrl);
+        setGeneratedForm(data.schema);
+      } else {
+        setGeneratedForm(data);
+      }
     } catch (err) {
       console.error(err);
       setGeneratedForm({ error: "Failed", details: err });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const checkGoogleAuth = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/google/status`);
+      const data = await res.json();
+      setIsGoogleAuth(data.authenticated);
+    } catch (e) {
+      console.error("Google Auth Check Failed", e);
+    }
+  };
+
+  const connectGoogle = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/google/auth/url`);
+      const data = await res.json();
+      window.location.href = data.url;
+    } catch (e) {
+      alert("Failed to get auth URL");
     }
   };
 
@@ -71,6 +109,7 @@ export default function Home() {
         console.error("API Connection Error:", err);
         setApiStatus("error");
       });
+    checkGoogleAuth();
   }, []);
 
   return (
@@ -166,14 +205,58 @@ export default function Home() {
                 placeholder="E.g., Create a registration form for a coding bootcamp with name, email, and experience level."
                 className="w-full p-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-black min-h-[100px]"
               />
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating || !prompt}
-                className="self-start px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isGenerating ? "Generating..." : "Generate JSON Schema"}
-              </button>
+
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || !prompt}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isGenerating ? "Generating..." : "Generate JSON Schema"}
+                </button>
+
+                <div className="flex items-center gap-2 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+                  <input
+                    type="checkbox"
+                    id="useGoogle"
+                    checked={isGoogleChecked}
+                    onChange={(e) => setIsGoogleChecked(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                    disabled={!isGoogleAuth}
+                  />
+                  <label htmlFor="useGoogle" className={`text-sm font-medium ${!isGoogleAuth ? "text-zinc-400" : "text-zinc-700 dark:text-zinc-300"}`}>
+                    Create Google Form
+                  </label>
+                  {!isGoogleAuth && (
+                    <button
+                      onClick={connectGoogle}
+                      className="ml-2 text-xs bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2 py-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                    >
+                      Connect Google
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
+
+            {googleFormUrl && (
+              <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 dark:bg-green-900 rounded-full text-green-600 dark:text-green-400">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-green-900 dark:text-green-100">Google Form Created!</h3>
+                    <a href={googleFormUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-green-700 dark:text-green-300 underline hover:no-underline">
+                      {googleFormUrl}
+                    </a>
+                  </div>
+                </div>
+                <a href={googleFormUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium flex items-center gap-2">
+                  Open Form <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
+            )}
 
             {generatedForm && (
               <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-6">
