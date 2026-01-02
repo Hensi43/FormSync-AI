@@ -1,5 +1,5 @@
 
-from .google_auth import google_auth
+from core.google_auth import google_auth
 
 class GoogleFormsService:
     def __init__(self):
@@ -51,7 +51,9 @@ class GoogleFormsService:
         # Return the responder URL
         # We need to fetch the form again to get the responderUri if it wasn't in the create response
         # The create response usually has responderUri.
-        return form.get("responderUri")
+        # Return both the responder URL and the Edit URL
+        edit_url = f"https://docs.google.com/forms/d/{form_id}/edit"
+        return {"responderUri": form.get("responderUri"), "editUrl": edit_url}
 
     def _create_item_request(self, field, index):
         """
@@ -60,41 +62,49 @@ class GoogleFormsService:
         """
         label = field.get("label", "Untitled Question")
         field_type = field.get("type", "text")
-        # TODO: Handle required fields if schema has it. 
-        # Typically 'required' is a property of the Question object inside questionItem.
-
-        question_item = {
-            "question": {
-                "required": field.get("required", False),
-                "textQuestion": {} # Default to short answer
-            }
+        
+        # Base Question dictionary
+        question = {
+            "required": field.get("required", False)
         }
 
+        # Determine specific question type (OneOf: textQuestion, choiceQuestion, etc.)
         if field_type == "textarea":
-             question_item["question"]["textQuestion"] = {"paragraph": True}
+             question["textQuestion"] = {"paragraph": True}
         elif field_type in ["select", "radio"]:
-            options = [{"value": opt} for opt in field.get("options", [])]
-            question_item["question"]["choiceQuestion"] = {
+            raw_options = field.get("options", [])
+            if not raw_options:
+                raw_options = ["Option 1"]
+            options = [{"value": opt} for opt in raw_options]
+            question["choiceQuestion"] = {
                 "type": "RADIO",
                 "options": options
             }
         elif field_type == "checkbox":
-            options = [{"value": opt} for opt in field.get("options", [])]
-            question_item["question"]["choiceQuestion"] = {
+            raw_options = field.get("options", [])
+            if not raw_options:
+                raw_options = ["Option 1"]
+            options = [{"value": opt} for opt in raw_options]
+            question["choiceQuestion"] = {
                 "type": "CHECKBOX",
                 "options": options
             }
         elif field_type == "date":
-             question_item["question"]["dateQuestion"] = {}
+             question["dateQuestion"] = {}
         elif field_type == "time":
-             question_item["question"]["timeQuestion"] = {}
+             question["timeQuestion"] = {}
+        else:
+             # Default to short answer text
+             question["textQuestion"] = {}
         
         # Construct the createItem request
         return {
             "createItem": {
                 "item": {
                     "title": label,
-                    "questionItem": question_item
+                    "questionItem": {
+                        "question": question
+                    }
                 },
                 "location": {
                     "index": index

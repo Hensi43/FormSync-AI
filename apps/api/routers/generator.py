@@ -33,7 +33,12 @@ def generate_google_form(request: GenerateRequest):
 
     # 2. Create Google Form
     try:
-        form_url = google_forms_service.create_form(schema)
-        return {"formUrl": form_url, "schema": schema}
+        result = google_forms_service.create_form(schema)
+        
+        # Support both old string return and new dict return for backward compat
+        if isinstance(result, dict):
+             return {"formUrl": result.get("responderUri"), "editUrl": result.get("editUrl"), "schema": schema}
+        else:
+             return {"formUrl": result, "schema": schema}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Google Forms creation failed: {str(e)}")

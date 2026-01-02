@@ -42,7 +42,10 @@ async def auth_callback(code: str):
     redirect_uri = "http://localhost:8000/api/v1/google/auth/callback"
     try:
         google_auth.fetch_token(code, redirect_uri)
-        return {"message": "Successfully authenticated with Google! You can close this window."}
+        google_auth.fetch_token(code, redirect_uri)
+        from fastapi.responses import RedirectResponse
+        # Redirect back to the frontend dashboard
+        return RedirectResponse(url="http://localhost:3000?auth_success=true")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
 

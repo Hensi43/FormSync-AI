@@ -82,3 +82,25 @@ def get_form_responses(form_id: str):
              return []
         print(f"Error fetching responses: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+@router.delete("/{form_id}")
+def delete_form(form_id: str):
+    try:
+        # First delete responses associated with the form (manual cascade if DB doesn't handle it)
+        try:
+             supabase.table("responses").delete().eq("form_id", form_id).execute()
+        except:
+             pass # Ignore if table or responses don't exist
+
+        # Then delete the form
+        response = supabase.table("forms").delete().eq("id", form_id).execute()
+        
+        # Check if actual deletion happened
+        if not response.data:
+             # It might have been already deleted or didn't exist, but for idempotency we can return success
+             # or create a custom check. Let's return success with a note.
+             return {"message": "Form deleted (or not found)"}
+
+        return {"status": "success", "deleted_id": form_id}
+    except Exception as e:
+        print(f"Error deleting form: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
