@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
+import { supabase } from "../lib/supabaseClient";
+
 export type ApiStatus = "loading" | "connected" | "error";
 
 interface GeneratedSchema {
@@ -122,23 +124,53 @@ export function useFormGenerator() {
 
     const saveForm = async () => {
         if (!generatedForm) return;
-        setIsSaving(true);
+
+        // Get user from local storage or context if available. 
+        // Since this hook is used in page.tsx inside AuthProvider, we need to pass user to it or get it here.
+        // Ideally we refactor the hook to useAuth, but for minimal change let's rely on the caller passing it or getting it here.
+        // Actually, let's use the supabase client to get the session synchronously if possible, or just expect the component to handle auth check.
+        // Better: Update the hook to useAuth() context. But useAuth is in context/AuthContext.tsx.
+        // Let's import useAuth.
+
         try {
-            const res = await fetch(`${API_URL}/api/v1/forms/`, {
+            setIsSaving(true); // Re-use loading state for saving
+
+            // We need to fetch the user ID. 
+            // Since we can't easily hook into useAuth inside this hook without making it dependent on the provider (which it is now),
+            // let's assume we can get the session from supabase directly or local storage key if we set it.
+            // Alternatively, pass user as argument. Let's update the function signature.
+
+            const { data: { session } } = await supabase.auth.getSession();
+            const userId = session?.user?.id;
+
+            if (!userId) {
+                toast.error("You must be logged in to save forms");
+                setIsSaving(false);
+                return;
+            }
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/forms/`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-User-ID": userId
+                },
                 body: JSON.stringify({
-                    title: generatedForm.title || "Untitled Form",
+                    title: generatedForm.title,
                     description: generatedForm.description,
                     schema_body: generatedForm
-                }),
+                })
             });
+
             if (!res.ok) throw new Error("Failed to save");
+
             const data = await res.json();
             const url = `${window.location.origin}/public/${data.id}`;
             setShareUrl(url);
-            toast.success("Form Saved to Database!");
+            toast.success("Form saved successfully!");
+            // Redirect to dashboard or just show success
         } catch (err) {
+            console.error(err);
             toast.error("Failed to save form");
         } finally {
             setIsSaving(false);

@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Activity, Plus, FileText, BarChart3, Loader2, ArrowLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -23,11 +24,24 @@ export default function DashboardPage() {
         }
 
         if (user) {
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/forms/`)
-                .then((res) => res.json())
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/forms/`, {
+                headers: {
+                    "X-User-ID": user.id
+                }
+            })
+                .then((res) => {
+                    if (res.status === 401) {
+                        toast.error("Session expired"); // Need to import toast or handle gracefully
+                        signOut();
+                        return null;
+                    }
+                    return res.json();
+                })
                 .then((data) => {
-                    setForms(data);
-                    setLoading(false);
+                    if (data) {
+                        setForms(data);
+                        setLoading(false);
+                    }
                 })
                 .catch((err) => {
                     console.error("Failed to load forms", err);
@@ -37,10 +51,15 @@ export default function DashboardPage() {
     }, [user, authLoading, router]);
 
     const handleSelectForm = async (id: string) => {
+        if (!user) return;
         setSelectedFormId(id);
         setLoadingResponses(true);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/forms/${id}/responses`);
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/forms/${id}/responses`, {
+                headers: {
+                    "X-User-ID": user.id
+                }
+            });
             const data = await res.json();
             setResponses(data);
         } catch (err) {
@@ -52,11 +71,15 @@ export default function DashboardPage() {
 
     const handleDeleteForm = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
+        if (!user) return;
         if (!confirm("Are you sure you want to delete this form? This cannot be undone.")) return;
 
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/forms/${id}`, {
                 method: "DELETE",
+                headers: {
+                    "X-User-ID": user.id
+                }
             });
 
             if (res.ok) {

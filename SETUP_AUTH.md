@@ -12,18 +12,21 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
 You can find these in **Supabase Dashboard** -> **Settings (Cog Icon)** -> **API**.
 
-## 2. Google OAuth Configuration
+## 2. Google OAuth Configuration (Google Auth Platform)
 1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
 2. Create a new Project (or use an existing one).
-3. Go to **APIs & Services** -> **OAuth consent screen**.
-   - Select **External**.
-   - Fill in the App Name ("FormSync AI") and support email.
-4. Go to **Credentials** -> **Create Credentials** -> **OAuth Client ID**.
-   - Application type: **Web application**.
+3. Search for **Google Auth Platform** in the top search bar and click it.
+4. **Configure Branding & Audience (Consent Screen):**
+   - Click **Branding** in the left sidebar to set your App Name ("FormSync AI") and support email.
+   - Click **Audience** in the left sidebar. Set it to **External**.
+   - *Important:* In the **Audience** tab, change the publishing status from "Testing" to "In production" (Publish the app) so that anyone can log in, not just developers.
+5. **Create OAuth Client:**
+   - Click **Clients** in the left sidebar (or click "Create OAuth client").
+   - Click **Create Client** and select **Web application**.
    - Name: `Supabase Auth`.
    - **Authorized JavaScript origins**: `https://<your-project>.supabase.co` (See Supabase -> Auth -> Providers -> Google for exact URL).
    - **Authorized redirect URIs**: `https://<your-project>.supabase.co/auth/v1/callback`.
-5. Copy the **Client ID** and **Client Secret**.
+6. Copy the **Client ID** and **Client Secret** that are generated.
 
 ## 3. Enable in Supabase
 1. Go to **Supabase Dashboard** -> **Authentication** -> **Providers**.
